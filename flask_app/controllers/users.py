@@ -60,7 +60,7 @@ def dashboard():
         'id': session['user_id']
     }
 
-    return render_template('dashboard.html', user = User.get_by_id(data), messages= Message.read_message(data), users=User.get_all_users(data))
+    return render_template('dashboard.html', user = User.get_by_id(data), messages= Message.read_message(data), users=User.get_all_users())
 
 @app.route('/logout')
 def logout():

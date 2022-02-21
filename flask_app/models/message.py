@@ -15,9 +15,9 @@ class Message:
         self.id = data['id']
         self.messages = data['messages']
         self.reciever_id = data['reciever_id']
-        self.reciever = data['reciever']
+        self.reciever = None
         self.sender_id = data['sender_id']
-        self.sender = data['sender']
+        self.sender = None
         self.created_at = data['created_at']
         self.updated_at = data['updated_at']
 
@@ -31,14 +31,43 @@ class Message:
 
     @classmethod
     def read_message(cls, data):
-        query = "SELECT users.first_name as sender, users2.first_name as reciever, messages FROM users LEFT JOIN messages ON users.id = messages.sender_id LEFT JOIN users as users2 on users2.id = messages.reciever_id WHERE users2.id = %(id)s "
+        # query = "SELECT users.first_name as sender, users2.first_name as reciever, messages FROM users LEFT JOIN messages ON users.id = messages.sender_id LEFT JOIN users as users2 on users2.id = messages.reciever_id WHERE users2.id = %(id)s; "
+        query = "SELECT * FROM users LEFT JOIN messages ON users.id = messages.sender_id LEFT JOIN users as users2 on users2.id = messages.reciever_id WHERE users2.id = %(id)s; "
 
         results = connectToMySQL(cls.db_name).query_db(query, data)
+        print(results)
         messages = []
         for message in results:
-            messages.append(cls(message))
+            # make a dictionary for the message
+            message_dict = {
+                'id':message['messages.id'],
+                'messages':message['messages'],
+                'sender_id':message['sender_id'],
+                'reciever_id':message['reciever_id'],
+                'created_at':message['messages.created_at'],
+                'updated_at':message['messages.updated_at']
+            }
+            #make a message object
+            this_message = cls(message_dict)
+            # make a sender_object
+            this_sender = User(message)
+            # make a dictionary for the receiver
+            r_dictionary = {
+                'id':message['users2.id'],
+                'first_name':message['users2.first_name'],
+                'last_name':message['users2.last_name'],
+                'email':message['users2.email'],
+                'password':message['users2.password'],
+                'created_at':message['users2.created_at'],
+                'updated_at':message['users2.updated_at'],
+            }
+            this_reciever = User(r_dictionary)
+            # associate the sender, reiever, and the message
+            this_message.sender = this_sender
+            this_message.reciever = this_reciever
+            messages.append(this_message)
             
-        return messages
+        return messages # list of message objects
 
 
 
